@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 
-import { getTypeVehicle } from "@/components/scripts/vehicle/generalInfoVehicle/getVehicles";
+import { getTypeVehicle } from "../../scripts/vehicle/generalInfoVehicle/getVehicles";
 
 export default function ModalChangeDataToService({ onClose }) {
   const { numberVehicle } = useParams();

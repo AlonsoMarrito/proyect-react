@@ -1,9 +1,9 @@
-const API_URL = import.meta.env.VITE_BACKEND_URL
+const API_URL = import.meta.env.DEV
+  ? "/api"
+  : import.meta.env.VITE_BACKEND_URL;
 
 export async function authUser() {
   try {
-    const API_URL = import.meta.env.VITE_BACKEND_URL;
-
     const response = await fetch(`${API_URL}/auth/user-by-token`, {
       method: "GET",
       credentials: "include",

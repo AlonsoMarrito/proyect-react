@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 
-import { getPreferences } from "@/components/scripts/preference/getPreference";
-import { getTypeVehicle } from "@/components/scripts/vehicle/generalInfoVehicle/getVehicles";
+import { getPreferences } from "../../scripts/preference/getPreference";
+import { getTypeVehicle } from "../../scripts/vehicle/generalInfoVehicle/getVehicles";
 
 export default function ModalReportDamage({ onClose }) {
   const { numberVehicle } = useParams();

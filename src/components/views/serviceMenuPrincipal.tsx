@@ -70,7 +70,6 @@ export default function MenuServicesView() {
         </button>
       </div>
 
-      {/* CONTENT */}
       <div style={styles.content}>
         {componentView === 1 && <LogsServiceVehicle />}
       </div>
@@ -78,7 +77,6 @@ export default function MenuServicesView() {
   );
 }
 
-/* ================= STYLES ================= */
 
 const styles: Record<string, React.CSSProperties> = {
   container: {
