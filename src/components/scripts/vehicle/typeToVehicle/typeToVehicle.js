@@ -16,10 +16,11 @@ export async function createNewVehicle(vehicleName, file) {
 
   try {
     const res = await axios.post(
-      API_URL + "/type-to-vehicles/create-new_type",
+      `${API_URL}/type-to-vehicles/create-new_type`,
       formData,
       {
         headers: { "Content-Type": "multipart/form-data" },
+        withCredentials: true,
       }
     );
 

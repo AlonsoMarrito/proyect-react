@@ -70,7 +70,15 @@ export default function SideBar({ user }: any) {
       }}
     >
       {filteredRoutes.map((item) => {
-        const isActive = location.pathname.includes(item.route);
+        const navTo =
+          item.route === "welcome"
+            ? "/"
+            : `/${item.route}`;
+        const isActive =
+          item.route === "welcome"
+            ? location.pathname === "/" || location.pathname.startsWith("/welcome")
+            : location.pathname === navTo ||
+              location.pathname.startsWith(`${navTo}/`);
 
         const isServices =
           item.label === "Servicios" && servicesActive > 0;
@@ -80,7 +88,7 @@ export default function SideBar({ user }: any) {
         return (
           <NavLink
             key={item.route}
-            to={`/${item.route === "welcome" ? "" : item.route}`}
+            to={navTo}
             onMouseEnter={() => setHovered(item.route)}
             onMouseLeave={() => setHovered(null)}
             style={{

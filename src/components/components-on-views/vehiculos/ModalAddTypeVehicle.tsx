@@ -1,8 +1,8 @@
 import React, { useEffect, useState, type CSSProperties } from "react";
 import Swal from "sweetalert2";
-import { createNewBase } from "../../scripts/bases/createNewBase";
+import { createNewVehicle as createNewVehicleType } from "../../scripts/vehicle/typeToVehicle/typeToVehicle";
 
-export type BaseModalTheme = {
+export type VehicleTypeModalTheme = {
   textColorPrimary: string;
   panelBg: string;
   panelBorder: string;
@@ -14,7 +14,7 @@ export type BaseModalTheme = {
   inputBorder: string;
 };
 
-const FALLBACK: BaseModalTheme = {
+const FALLBACK: VehicleTypeModalTheme = {
   textColorPrimary: "#1a1d21",
   panelBg: "#ffffff",
   panelBorder: "rgba(15, 23, 42, 0.09)",
@@ -29,28 +29,20 @@ const FALLBACK: BaseModalTheme = {
 
 type Props = {
   onClose: () => void;
-  theme?: BaseModalTheme;
+  theme?: VehicleTypeModalTheme;
   onCreated?: () => void | Promise<void>;
 };
 
-function typeHubFromSelect(label: string): "base" | "garza" {
-  return label === "Garza" ? "garza" : "base";
-}
-
-export default function ModalAddNewBase({
+export default function ModalAddTypeVehicle({
   onClose,
   theme: themeProp,
   onCreated,
 }: Props) {
   const theme = themeProp ?? FALLBACK;
-  const [saving, setSaving] = useState(false);
-
   const [name, setName] = useState("");
-  const [tipo, setTipo] = useState("Base");
-  const [cologne, setCologne] = useState("");
-  const [street, setStreet] = useState("");
-  const [crosse, setCrosse] = useState("");
-  const [coordinates, setCoordinates] = useState("");
+  const [file, setFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -60,7 +52,71 @@ export default function ModalAddNewBase({
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose, saving]);
 
-  const fieldStyle: CSSProperties = {
+  useEffect(() => {
+    return () => {
+      if (preview) URL.revokeObjectURL(preview);
+    };
+  }, [preview]);
+
+  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    setFile(f);
+    setPreview((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return URL.createObjectURL(f);
+    });
+  };
+
+  const handleBackdrop = (ev: React.MouseEvent) => {
+    if (ev.target === ev.currentTarget && !saving) onClose();
+  };
+
+  const submit = async () => {
+    const n = name.trim();
+    if (!n) {
+      void Swal.fire({
+        icon: "warning",
+        title: "Nombre requerido",
+        confirmButtonColor: theme.accent,
+      });
+      return;
+    }
+    if (!file) {
+      void Swal.fire({
+        icon: "warning",
+        title: "Selecciona una imagen",
+        confirmButtonColor: theme.accent,
+      });
+      return;
+    }
+
+    setSaving(true);
+    try {
+      await createNewVehicleType(n, file);
+      await Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "success",
+        title: "Tipo de vehículo creado",
+        showConfirmButton: false,
+        timer: 2000,
+      });
+      await onCreated?.();
+      onClose();
+    } catch (e) {
+      console.error(e);
+      void Swal.fire({
+        icon: "error",
+        title: "No se pudo crear el tipo",
+        confirmButtonColor: theme.accent,
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const field: CSSProperties = {
     width: "100%",
     padding: "10px 12px",
     borderRadius: "10px",
@@ -70,75 +126,6 @@ export default function ModalAddNewBase({
     background: theme.panelBg,
     boxSizing: "border-box",
   };
-
-  const labelStyle: CSSProperties = {
-    display: "block",
-    fontSize: "11px",
-    fontWeight: 700,
-    letterSpacing: "0.06em",
-    textTransform: "uppercase",
-    color: theme.mutedText,
-    marginBottom: "6px",
-  };
-
-  const handleBackdrop = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget && !saving) onClose();
-  };
-
-  const handleSave = async () => {
-    const n = name.trim();
-    if (!n) {
-      void Swal.fire({
-        icon: "warning",
-        title: "Nombre requerido",
-        text: "Indica el nombre de la base.",
-        confirmButtonColor: theme.accent,
-      });
-      return;
-    }
-
-    setSaving(true);
-    try {
-      await createNewBase({
-        name: n,
-        type_hub: typeHubFromSelect(tipo),
-        cologne: cologne.trim(),
-        street_and_number: street.trim(),
-        crosse: crosse.trim(),
-        coordinates: coordinates.replace(/\s/g, "") || "0,0",
-        status: "Activa",
-      });
-
-      const Toast = Swal.mixin({
-        toast: true,
-        position: "top-end",
-        showConfirmButton: false,
-        timer: 2000,
-        timerProgressBar: true,
-      });
-      await Toast.fire({ icon: "success", title: "Base registrada" });
-      await onCreated?.();
-      onClose();
-    } catch (e) {
-      console.error(e);
-      await Swal.fire({
-        icon: "error",
-        title: "No se pudo guardar",
-        text: String((e as Error)?.message ?? e).slice(0, 200),
-        confirmButtonColor: theme.accent,
-      });
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const group = (): CSSProperties => ({
-    background: theme.accentMuted,
-    border: `1px solid ${theme.panelBorder}`,
-    borderRadius: "12px",
-    padding: "14px 16px",
-    marginBottom: "12px",
-  });
 
   return (
     <div
@@ -159,7 +146,7 @@ export default function ModalAddNewBase({
     >
       <div
         style={{
-          width: "min(560px, 100%)",
+          width: "min(480px, 100%)",
           maxHeight: "90vh",
           overflow: "auto",
           borderRadius: "18px",
@@ -173,7 +160,7 @@ export default function ModalAddNewBase({
         onMouseDown={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
-        aria-labelledby="modal-add-base-title"
+        aria-labelledby="modal-new-vehicle-type-title"
       >
         <div
           style={{
@@ -184,7 +171,7 @@ export default function ModalAddNewBase({
             marginBottom: "12px",
           }}
         >
-          <div style={{ minWidth: 0 }}>
+          <div>
             <p
               style={{
                 margin: 0,
@@ -195,18 +182,13 @@ export default function ModalAddNewBase({
                 color: theme.mutedText,
               }}
             >
-              Inventario
+              Catálogo
             </p>
             <h2
-              id="modal-add-base-title"
-              style={{
-                margin: "6px 0 0",
-                fontSize: "1.25rem",
-                fontWeight: 800,
-                color: theme.textColorPrimary,
-              }}
+              id="modal-new-vehicle-type-title"
+              style={{ margin: "6px 0 0", fontSize: "1.2rem", fontWeight: 800 }}
             >
-              Agregar base
+              Nuevo tipo de vehículo
             </h2>
           </div>
           <button
@@ -221,7 +203,6 @@ export default function ModalAddNewBase({
               lineHeight: 1,
               cursor: "pointer",
               color: theme.mutedText,
-              flexShrink: 0,
             }}
             onClick={onClose}
             disabled={saving}
@@ -231,92 +212,64 @@ export default function ModalAddNewBase({
           </button>
         </div>
 
-        <div style={group()}>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: "12px",
-            }}
-          >
-            <div>
-              <label style={labelStyle}>Nombre</label>
-              <input
-                style={fieldStyle}
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Ej. Central"
-                disabled={saving}
-              />
-            </div>
-            <div>
-              <label style={labelStyle}>Tipo</label>
-              <select
-                style={{ ...fieldStyle, cursor: "pointer" }}
-                value={tipo}
-                onChange={(e) => setTipo(e.target.value)}
-                disabled={saving}
-              >
-                <option value="Base">Base</option>
-                <option value="Garza">Garza</option>
-              </select>
-            </div>
-          </div>
-        </div>
+        <label
+          style={{
+            display: "block",
+            fontSize: "11px",
+            fontWeight: 700,
+            color: theme.mutedText,
+            marginBottom: "6px",
+            letterSpacing: "0.06em",
+            textTransform: "uppercase",
+          }}
+        >
+          Nombre del tipo
+        </label>
+        <input
+          style={{ ...field, marginBottom: "14px" }}
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Ej. Ambulancia, Pipa…"
+          disabled={saving}
+        />
 
-        <div style={group()}>
-          <label style={labelStyle}>Ubicación</label>
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: "10px",
-            }}
-          >
-            <input
-              style={fieldStyle}
-              value={cologne}
-              onChange={(e) => setCologne(e.target.value)}
-              placeholder="Colonia"
-              disabled={saving}
-            />
-            <input
-              style={fieldStyle}
-              value={street}
-              onChange={(e) => setStreet(e.target.value)}
-              placeholder="Calle y número"
-              disabled={saving}
-            />
-            <input
-              style={fieldStyle}
-              value={crosse}
-              onChange={(e) => setCrosse(e.target.value)}
-              placeholder="Cruce"
-              disabled={saving}
-            />
-          </div>
-        </div>
+        <input
+          type="file"
+          accept="image/*"
+          style={{ display: "none" }}
+          id="vehicle-type-file"
+          onChange={handleFile}
+          disabled={saving}
+        />
+        <label
+          htmlFor="vehicle-type-file"
+          style={{
+            display: "inline-block",
+            padding: "10px 16px",
+            borderRadius: "12px",
+            border: `2px solid ${theme.accent}`,
+            color: theme.accent,
+            fontWeight: 700,
+            cursor: saving ? "not-allowed" : "pointer",
+            marginBottom: "12px",
+          }}
+        >
+          Seleccionar imagen
+        </label>
 
-        <div style={group()}>
-          <label style={labelStyle}>Coordenadas (lat, lng)</label>
-          <input
-            style={fieldStyle}
-            value={coordinates}
-            onChange={(e) => setCoordinates(e.target.value)}
-            placeholder="Ej. 19.432608, -99.133209"
-            disabled={saving}
+        {preview && (
+          <img
+            src={preview}
+            alt="Vista previa"
+            style={{
+              width: "100%",
+              maxHeight: "200px",
+              objectFit: "contain",
+              borderRadius: "12px",
+              marginBottom: "12px",
+            }}
           />
-          <p
-            style={{
-              margin: "8px 0 0",
-              fontSize: "12px",
-              color: theme.mutedText,
-              lineHeight: 1.4,
-            }}
-          >
-            Formato como en el mapa: latitud y longitud separadas por coma.
-          </p>
-        </div>
+        )}
 
         <div
           style={{
@@ -331,7 +284,7 @@ export default function ModalAddNewBase({
           <button
             type="button"
             style={{
-              padding: "11px 20px",
+              padding: "11px 18px",
               borderRadius: "12px",
               border: `2px solid ${theme.inputBorder}`,
               background: theme.panelBg,
@@ -357,7 +310,7 @@ export default function ModalAddNewBase({
               boxShadow: `0 4px 14px ${theme.accentMuted}`,
               opacity: saving ? 0.85 : 1,
             }}
-            onClick={() => void handleSave()}
+            onClick={() => void submit()}
             disabled={saving}
           >
             {saving ? "Guardando…" : "Guardar"}

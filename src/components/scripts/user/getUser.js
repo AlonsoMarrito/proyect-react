@@ -19,9 +19,15 @@ export async function getUserById(numberUser){
     let user = []
     try {
         
-        const response = await fetch(`${API_URL}/users/${numberUser}`);
+        const response = await fetch(`${API_URL}/users/${numberUser}`, {
+            method: 'GET',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
         if (!response.ok) {
-          throw new Error(`Error en la petición: ${response.status}`);
+            throw new Error(`Error en la petición: ${response.status}`);
         }
         user = await response.json();
     return user

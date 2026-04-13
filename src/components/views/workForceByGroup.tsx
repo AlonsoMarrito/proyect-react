@@ -1,4 +1,5 @@
 import React, {
+  useCallback,
   useEffect,
   useState,
   type ChangeEvent,
@@ -17,6 +18,7 @@ import { getPreferences } from "../scripts/preference/getPreference";
 
 import ModalAddNewWorkForce from "../components-on-views/workforce/modalAddNewWorkForce";
 import ModalCreateNewEmployeed from "../components-on-views/workforce/modalCreateNewEmployeed";
+import { encryptId } from "../utils/workforceCipher";
 
 type PageTheme = {
   textColorPrimary: string;
@@ -143,41 +145,21 @@ export default function WorkForceByGroupView() {
     setWorkShiftNow(found != null && found.id != null ? Number(found.id) : null);
   };
 
-  const encryptId = (id: string | number) => {
-    if (!id) return "";
-
-    const rot = 5;
-    const text = String(id);
-
-    const encrypted = text
-      .split("")
-      .map((char) => {
-        const code = char.charCodeAt(0);
-
-        if (code >= 48 && code <= 57) {
-          return String.fromCharCode(((code - 48 + rot) % 10) + 48);
-        }
-
-        if (code >= 65 && code <= 90) {
-          return String.fromCharCode(((code - 65 + rot) % 26) + 65);
-        }
-
-        if (code >= 97 && code <= 122) {
-          return String.fromCharCode(((code - 97 + rot) % 26) + 97);
-        }
-
-        return char;
-      })
-      .join("");
-
-    return encodeURIComponent(encrypted);
-  };
-
   const openCloseModal = (val: number) =>
     setModalCreateNewEmployeedVisible(val);
 
   const openCloseModalAddNewWorkForce = () =>
     setModalAddNewWorkForce((prev) => !prev);
+
+  const refreshPersonalDelTurno = useCallback(async () => {
+    if (!shiftWork) return;
+    try {
+      const users = await getUserByShift(shiftWork);
+      setDataWorkForceUser(Array.isArray(users) ? users : []);
+    } catch (e) {
+      console.error(e);
+    }
+  }, [shiftWork]);
 
   const theme = colorApss[styleColor] ?? colorApss[0];
 
@@ -224,13 +206,28 @@ export default function WorkForceByGroupView() {
             background: `linear-gradient(180deg, ${theme.accent} 0%, ${theme.tableHeadBg} 100%)`,
           }}
         />
-        <div style={styles.heroText}>
-          <p style={{ ...styles.kicker, color: theme.mutedText }}>
-            Estado de fuerza
-          </p>
-          <h1 style={{ ...styles.title, color: theme.textColorPrimary }}>
-            Turno {shiftOnList || "—"}
-          </h1>
+        <div style={styles.heroMain}>
+          <div style={styles.heroTopRow}>
+            <div style={styles.heroText}>
+              <p style={{ ...styles.kicker, color: theme.mutedText }}>
+                Estado de fuerza
+              </p>
+              <h1 style={{ ...styles.title, color: theme.textColorPrimary }}>
+                Turno {shiftOnList || "—"}
+              </h1>
+            </div>
+            <button
+              type="button"
+              style={{
+                ...styles.btnHeroAddEmployee,
+                background: `linear-gradient(180deg, ${theme.accent} 0%, ${theme.tableHeadBg} 100%)`,
+                boxShadow: `0 4px 14px ${theme.accentMuted}`,
+              }}
+              onClick={() => openCloseModal(1)}
+            >
+              Agregar nuevo empleado
+            </button>
+          </div>
         </div>
       </div>
 
@@ -471,7 +468,11 @@ export default function WorkForceByGroupView() {
       )}
 
       {modalCreateNewEmployeedVisible === 1 && (
-        <ModalCreateNewEmployeed onClose={() => openCloseModal(0)} />
+        <ModalCreateNewEmployeed
+          theme={theme}
+          onClose={() => openCloseModal(0)}
+          onCreated={refreshPersonalDelTurno}
+        />
       )}
     </div>
   );
@@ -499,9 +500,36 @@ const styles: Record<string, CSSProperties> = {
     borderRadius: "6px",
     flexShrink: 0,
   },
-  heroText: {
+  heroMain: {
     flex: 1,
     minWidth: 0,
+    display: "flex",
+    flexDirection: "column",
+    gap: "0.5rem",
+  },
+  heroTopRow: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    gap: "12px",
+    flexWrap: "wrap",
+    width: "100%",
+  },
+  heroText: {
+    flex: "1 1 200px",
+    minWidth: 0,
+  },
+  btnHeroAddEmployee: {
+    flexShrink: 0,
+    padding: "12px 18px",
+    borderRadius: "12px",
+    border: "none",
+    color: "#fff",
+    cursor: "pointer",
+    fontWeight: 700,
+    fontSize: "14px",
+    letterSpacing: "0.02em",
+    whiteSpace: "nowrap",
   },
   kicker: {
     fontSize: "11px",

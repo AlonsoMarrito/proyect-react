@@ -1,8 +1,10 @@
-const API_URL = import.meta.env.VITE_BACKEND_URL
+const API_URL = import.meta.env.VITE_BACKEND_URL ?? import.meta.env.VUE_APP_API_URL;
 
 export async function getAllBases() {
     try {
-        const response = await fetch(API_URL+"/bases");
+        const response = await fetch(`${API_URL}/bases`, {
+            credentials: "include",
+        });
         if (!response.ok) {
             throw new Error(`Error en la petición: ${response.status}`);
         }
@@ -16,7 +18,9 @@ export async function getAllBases() {
 
 export async function getAllBasesOperatives() {
     try {
-        const response = await fetch(API_URL+"/bases");
+        const response = await fetch(`${API_URL}/bases`, {
+            credentials: "include",
+        });
         if (!response.ok) {
             throw new Error(`Error en la petición: ${response.status}`);
         }
@@ -30,7 +34,9 @@ export async function getAllBasesOperatives() {
 
 export async function getBaseByName(nameRoute) {
     try {
-        const response = await fetch(API_URL+"/bases/name/"+nameRoute);
+        const response = await fetch(`${API_URL}/bases/name/${encodeURIComponent(nameRoute)}`, {
+            credentials: "include",
+        });
         if (!response.ok) {
             throw new Error(`Error en la petición: ${response.status}`);
         }
@@ -44,7 +50,9 @@ export async function getBaseByName(nameRoute) {
 
 export async function getBaseById(id) {
     try {
-        const response = await fetch(API_URL+"/bases/"+id);
+        const response = await fetch(`${API_URL}/bases/${id}`, {
+            credentials: "include",
+        });
         if (!response.ok) {
             throw new Error(`Error en la petición: ${response.status}`);
         }

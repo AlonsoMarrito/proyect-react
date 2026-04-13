@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 
+import dumieImg from "../../../assets/vehiclesUnitImg/dumie.png";
+import takePictureImg from "../../../assets/icons-app/takePicture.png";
 import { getPreferences } from "../../scripts/preference/getPreference";
 import { getTypeVehicle } from "../../scripts/vehicle/generalInfoVehicle/getVehicles";
 
@@ -78,8 +80,7 @@ export default function ModalReportDamage({ onClose }) {
               <div className="image-space-individual">
                 <img
                   src={
-                    generalDataAboutVehicle.front_img ||
-                    require("@/assets/vehiclesUnitImg/dumie.png")
+                    generalDataAboutVehicle.front_img || dumieImg
                   }
                   alt=""
                   className="img-modal-damage"
@@ -98,8 +99,7 @@ export default function ModalReportDamage({ onClose }) {
               <div className="image-space-individual">
                 <img
                   src={
-                    generalDataAboutVehicle.back_img ||
-                    require("@/assets/vehiclesUnitImg/dumie.png")
+                    generalDataAboutVehicle.back_img || dumieImg
                   }
                   alt=""
                   className="img-modal-damage"
@@ -118,8 +118,7 @@ export default function ModalReportDamage({ onClose }) {
               <div className="image-space-individual">
                 <img
                   src={
-                    generalDataAboutVehicle.cover_img ||
-                    require("@/assets/vehiclesUnitImg/dumie.png")
+                    generalDataAboutVehicle.cover_img || dumieImg
                   }
                   alt=""
                   className="img-modal-damage"
@@ -139,8 +138,7 @@ export default function ModalReportDamage({ onClose }) {
               <div className="image-space-individual">
                 <img
                   src={
-                    generalDataAboutVehicle.left_img ||
-                    require("@/assets/vehiclesUnitImg/dumie.png")
+                    generalDataAboutVehicle.left_img || dumieImg
                   }
                   alt=""
                   className="img-modal-damage"
@@ -159,8 +157,7 @@ export default function ModalReportDamage({ onClose }) {
               <div className="image-space-individual">
                 <img
                   src={
-                    generalDataAboutVehicle.up_img ||
-                    require("@/assets/vehiclesUnitImg/dumie.png")
+                    generalDataAboutVehicle.up_img || dumieImg
                   }
                   alt=""
                   className="img-modal-damage"
@@ -205,7 +202,7 @@ export default function ModalReportDamage({ onClose }) {
               Adjuntar imagen
               <button className="button-img">
                 <img
-                  src={require("@/assets/icons-app/takePicture.png")}
+                  src={takePictureImg}
                   className={preferenceColor === 1 ? "invertido" : ""}
                   alt=""
                 />
