@@ -1,10 +1,23 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import './index.css'
-import App from './App.jsx'
+import React from "react";
+import ReactDOM from "react-dom/client";
+import App from "./App";
+import { BrowserRouter } from "react-router-dom";
+import "./index.css";
 
-createRoot(document.getElementById('root')).render(
-  <StrictMode>
+// Compatibilidad temporal para scripts legacy que usan process.env.VUE_APP_API_URL
+if (!globalThis.process) {
+  globalThis.process = { env: {} };
+}
+
+globalThis.process.env = {
+  ...globalThis.process.env,
+  ...import.meta.env,
+  VUE_APP_API_URL:
+    import.meta.env.VUE_APP_API_URL ?? import.meta.env.VITE_BACKEND_URL,
+};
+
+ReactDOM.createRoot(document.getElementById("root")).render(
+  <BrowserRouter>
     <App />
-  </StrictMode>,
-)
+  </BrowserRouter>
+);

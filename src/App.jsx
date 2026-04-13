@@ -1,27 +1,49 @@
-import { useState, useEffect } from 'react';
-import Login from './components/Login';
-import { getUserByToken } from './api/auth';
+import { useState, useEffect } from "react";
+import BarNav from "./components/common/BarNav";
+import SideBar from "./components/common/sideBar";
+import AppRouter from "./router/AppRouter";
+
+import { getUserByToken } from "./api/auth";
 
 function App() {
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     (async () => {
       try {
         const u = await getUserByToken();
         setUser(u);
-      } catch (err) {
-        console.log('No hay usuario logueado');
+      } catch {
+        console.log("No hay usuario logueado");
+      } finally {
+        setLoading(false);
       }
     })();
   }, []);
 
-  if (!user) return <Login onLogin={setUser} />;
+  if (loading) return <div>Cargando...</div>;
 
   return (
-    <div style={{ padding: '2rem' }}>
-      <h1>Bienvenido, {user.employees?.position || user.email}</h1>
-      <p>Número de empleado: {user.employees?.employee_number}</p>
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        height: "100vh",
+        overflow: "hidden",
+      }}
+    >
+      {user && <BarNav onToggleMenu={() => {}} />}
+
+      {user && (
+        <div style={{ width: "100%", flexShrink: 0 }}>
+          <SideBar user={user} />
+        </div>
+      )}
+
+      <div style={{ flex: 1, overflow: "hidden" }}>
+        <AppRouter user={user} setUser={setUser} />
+      </div>
     </div>
   );
 }
