@@ -1,5 +1,15 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { getPreferences } from "../scripts/preference/getPreference.js";
+
+export type HistorySearchFilters = {
+  id: string;
+  tipoServicio: string;
+  telefono: string;
+  fecha: string;
+  hora: string;
+  unidad: string;
+  tripulante: string;
+};
 
 type Props = {
   busqueda1: string;
@@ -9,11 +19,7 @@ type Props = {
   busqueda5: string;
   busqueda6: string;
   busqueda7: string;
-  onFilterChange: (filters: {
-    id: string;
-    tipoServicio: string;
-    unidad: string;
-  }) => void;
+  onFilterChange: (filters: HistorySearchFilters) => void;
 };
 
 export default function TopSearchDataOnInputs({
@@ -52,9 +58,23 @@ export default function TopSearchDataOnInputs({
     onFilterChange({
       id: search1,
       tipoServicio: search2,
+      telefono: search3,
+      fecha: search4,
+      hora: search5,
       unidad: search6,
+      tripulante: search7,
     });
-  }, [search1, search2, search6]);
+  }, [search1, search2, search3, search4, search5, search6, search7, onFilterChange]);
+
+  const fields = [
+    { label: busqueda1, value: search1, onChange: setSearch1 },
+    { label: busqueda2, value: search2, onChange: setSearch2 },
+    { label: busqueda3, value: search3, onChange: setSearch3 },
+    { label: busqueda4, value: search4, onChange: setSearch4 },
+    { label: busqueda5, value: search5, onChange: setSearch5 },
+    { label: busqueda6, value: search6, onChange: setSearch6 },
+    { label: busqueda7, value: search7, onChange: setSearch7 },
+  ];
 
   return (
     <div
@@ -63,29 +83,48 @@ export default function TopSearchDataOnInputs({
         background: colorApss[styleColor].primaryCardsBackground,
       }}
     >
-      <input placeholder={busqueda1} value={search1} onChange={(e) => setSearch1(e.target.value)} style={styles.input} />
-      <input placeholder={busqueda2} value={search2} onChange={(e) => setSearch2(e.target.value)} style={styles.input} />
-      <input placeholder={busqueda3} value={search3} onChange={(e) => setSearch3(e.target.value)} style={styles.input} />
-      <input placeholder={busqueda4} value={search4} onChange={(e) => setSearch4(e.target.value)} style={styles.input} />
-      <input placeholder={busqueda5} value={search5} onChange={(e) => setSearch5(e.target.value)} style={styles.input} />
-      <input placeholder={busqueda6} value={search6} onChange={(e) => setSearch6(e.target.value)} style={styles.input} />
-      <input placeholder={busqueda7} value={search7} onChange={(e) => setSearch7(e.target.value)} style={styles.input} />
+      {fields.map((f, i) => (
+        <div key={i} style={styles.field}>
+          <label style={styles.label}>{f.label}</label>
+          <input
+            placeholder={f.label}
+            value={f.value}
+            onChange={(e) => f.onChange(e.target.value)}
+            style={styles.input}
+            autoComplete="off"
+          />
+        </div>
+      ))}
     </div>
   );
 }
 
-const styles: Record<string, React.CSSProperties> = {
+const styles: Record<string, CSSProperties> = {
   container: {
-    width: "15vw",
-    maxWidth: "150px",
+    width: "100%",
+    boxSizing: "border-box",
     display: "flex",
     flexDirection: "column",
-    gap: "8px",
+    gap: "12px",
+  },
+  field: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "4px",
+  },
+  label: {
+    fontSize: "11px",
+    fontWeight: 700,
+    color: "#444",
+    letterSpacing: "0.02em",
   },
   input: {
-    padding: "6px",
-    borderRadius: "6px",
+    width: "100%",
+    boxSizing: "border-box",
+    padding: "8px 10px",
+    borderRadius: "8px",
     border: "1px solid #ccc",
-    fontSize: "12px",
+    fontSize: "13px",
+    color: "#1f1f1f",
   },
 };

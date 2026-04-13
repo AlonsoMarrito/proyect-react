@@ -6,7 +6,7 @@ import Bases from "../components/views/bases";
 import TypeToVehicles from "../components/views/TypeToVehicles";
 import SummaryServicesView from "../components/views/summaryServices";
 import ServiceMenuPrincipal from "../components/views/serviceMenuPrincipal";
-
+import WorkForceByGroupView from "../components/views/workForceByGroup";
 
 export default function AppRouter({ user, setUser }) {
   return (
@@ -75,6 +75,17 @@ export default function AppRouter({ user, setUser }) {
                 <Navigate to="/" />
             )
             }
+        />
+
+        <Route
+          path="/work-force-shift/:shift"
+          element={
+            user ? (
+              <WorkForceByGroupView />
+            ) : (
+              <Navigate to="/" />
+            )
+          }
         />
         
     </Routes>

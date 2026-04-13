@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { Link } from "react-router-dom";
 
 import { getPreferences } from "../../scripts/preference/getPreference.js";
@@ -78,41 +78,38 @@ export default function RowHistory({ servicesHistory }: Props) {
           style={{
             ...styles.card,
             background: colorApss[styleColor].primaryCardsBackground,
-            borderColor: colorApss[styleColor].borderBottomDecoration,
           }}
         >
           <div style={styles.rowTop}>
-            <div>
-              <h5>Folio: {item.id}</h5>
+            <div style={styles.cell}>
+              <h5 style={styles.folio}>Folio: {item.id}</h5>
             </div>
 
-            <div>
-              <h6>Tipo:</h6>
-              <p>{getTypeServiceName(item.id_type_service)}</p>
+            <div style={styles.cell}>
+              <h6 style={styles.label}>Tipo:</h6>
+              <p style={styles.value}>{getTypeServiceName(item.id_type_service)}</p>
             </div>
 
-            <div>
-              <h6>Unidad:</h6>
-              <p>{vehicles[item.vehicle_id]?.number_unit ?? "Sin unidad"}</p>
+            <div style={styles.cell}>
+              <h6 style={styles.label}>Unidad:</h6>
+              <p style={styles.value}>{vehicles[item.vehicle_id]?.number_unit ?? "Sin unidad"}</p>
             </div>
 
-            <div>
-              <h6>Colonia:</h6>
-              <p>{getCologneName(item.id_cologne)}</p>
+            <div style={styles.cell}>
+              <h6 style={styles.label}>Colonia:</h6>
+              <p style={styles.value}>{getCologneName(item.id_cologne)}</p>
             </div>
 
-            <div>
-              <h6>Fecha:</h6>
-              <p>{item.date_to_open?.slice(0, 10)}</p>
+            <div style={styles.cell}>
+              <h6 style={styles.label}>Fecha:</h6>
+              <p style={styles.value}>{item.date_to_open?.slice(0, 10)}</p>
             </div>
           </div>
 
           <div style={styles.rowBottom}>
-            <div>Operador: {getOperator(item.personal_on_a_service)}</div>
-            <div>Hora: {item.time_to_open?.slice(11, 19)}</div>
-            <div>
-              Estado: {item.status?.toUpperCase()}
-            </div>
+            <div style={styles.meta}>Operador: {getOperator(item.personal_on_a_service)}</div>
+            <div style={styles.meta}>Hora: {item.time_to_open?.slice(11, 19)}</div>
+            <div style={styles.meta}>Estado: {item.status?.toUpperCase()}</div>
           </div>
         </Link>
       ))}
@@ -120,24 +117,65 @@ export default function RowHistory({ servicesHistory }: Props) {
   );
 }
 
-const styles: Record<string, React.CSSProperties> = {
+const textBlack = "#000000";
+
+const styles: Record<string, CSSProperties> = {
   card: {
-    width: "80%",
+    width: "100%",
+    maxWidth: "100%",
+    boxSizing: "border-box",
     display: "flex",
     flexDirection: "column",
-    borderRadius: "10px",
-    border: "1px solid #ddd",
-    marginBottom: "10px",
-    padding: "10px",
+    borderRadius: "12px",
+    border: "1px solid rgba(0, 0, 0, 0.08)",
+    marginBottom: "14px",
+    padding: "14px 16px",
     textDecoration: "none",
+    color: textBlack,
+    boxShadow: "0 2px 8px rgba(0, 0, 0, 0.06), 0 4px 16px rgba(0, 0, 0, 0.08)",
   },
   rowTop: {
     display: "flex",
     justifyContent: "space-between",
+    flexWrap: "wrap",
+    gap: "12px",
+  },
+  cell: {
+    minWidth: "min(120px, 100%)",
+  },
+  folio: {
+    margin: 0,
+    fontSize: "1rem",
+    fontWeight: 700,
+    color: textBlack,
+  },
+  label: {
+    margin: "0 0 4px 0",
+    fontSize: "0.7rem",
+    fontWeight: 700,
+    color: textBlack,
+    textTransform: "uppercase",
+    letterSpacing: "0.04em",
+  },
+  value: {
+    margin: 0,
+    fontSize: "0.9rem",
+    fontWeight: 500,
+    color: textBlack,
+    lineHeight: 1.35,
   },
   rowBottom: {
     display: "flex",
     justifyContent: "space-between",
-    marginTop: "10px",
+    flexWrap: "wrap",
+    gap: "10px",
+    marginTop: "14px",
+    paddingTop: "12px",
+    borderTop: "1px solid rgba(0, 0, 0, 0.08)",
+  },
+  meta: {
+    fontSize: "0.85rem",
+    fontWeight: 500,
+    color: textBlack,
   },
 };

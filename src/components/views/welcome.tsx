@@ -58,7 +58,7 @@ export default function Welcome({ user }: any) {
         {dataWorkForceView.map((value, index) => (
           <Link
             key={index}
-            to={`/work-force-shift/${value.name}`}
+            to={`/work-force-shift/${encodeURIComponent(String(value.name ?? ""))}`}
             style={{
               ...styles.card,
               background: colorApss[styleColor]?.bgNormal,
