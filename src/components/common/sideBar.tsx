@@ -77,6 +77,10 @@ export default function SideBar({ user }: any) {
         const isActive =
           item.route === "welcome"
             ? location.pathname === "/" || location.pathname.startsWith("/welcome")
+            : item.route === "sumarys"
+              ? location.pathname.startsWith("/sumary")
+            : item.route === "stadistics"
+              ? location.pathname.startsWith("/stadistics")
             : location.pathname === navTo ||
               location.pathname.startsWith(`${navTo}/`);
 

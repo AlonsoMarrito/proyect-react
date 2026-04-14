@@ -11,6 +11,13 @@ export type HistorySearchFilters = {
   tripulante: string;
 };
 
+export type SearchInputsTheme = {
+  panelBg: string;
+  inputBorder: string;
+  labelColor: string;
+  inputText: string;
+};
+
 type Props = {
   busqueda1: string;
   busqueda2: string;
@@ -20,6 +27,9 @@ type Props = {
   busqueda6: string;
   busqueda7: string;
   onFilterChange: (filters: HistorySearchFilters) => void;
+  /** Evita carreras y reduce llamadas al filtrar por unidad */
+  debounceMs?: number;
+  theme?: SearchInputsTheme;
 };
 
 export default function TopSearchDataOnInputs({
@@ -31,6 +41,8 @@ export default function TopSearchDataOnInputs({
   busqueda6,
   busqueda7,
   onFilterChange,
+  debounceMs = 280,
+  theme,
 }: Props) {
   const [search1, setSearch1] = useState("");
   const [search2, setSearch2] = useState("");
@@ -55,16 +67,29 @@ export default function TopSearchDataOnInputs({
   }, []);
 
   useEffect(() => {
-    onFilterChange({
-      id: search1,
-      tipoServicio: search2,
-      telefono: search3,
-      fecha: search4,
-      hora: search5,
-      unidad: search6,
-      tripulante: search7,
-    });
-  }, [search1, search2, search3, search4, search5, search6, search7, onFilterChange]);
+    const t = window.setTimeout(() => {
+      onFilterChange({
+        id: search1,
+        tipoServicio: search2,
+        telefono: search3,
+        fecha: search4,
+        hora: search5,
+        unidad: search6,
+        tripulante: search7,
+      });
+    }, debounceMs);
+    return () => window.clearTimeout(t);
+  }, [
+    search1,
+    search2,
+    search3,
+    search4,
+    search5,
+    search6,
+    search7,
+    onFilterChange,
+    debounceMs,
+  ]);
 
   const fields = [
     { label: busqueda1, value: search1, onChange: setSearch1 },
@@ -76,21 +101,33 @@ export default function TopSearchDataOnInputs({
     { label: busqueda7, value: search7, onChange: setSearch7 },
   ];
 
+  const th = theme ?? {
+    panelBg: colorApss[styleColor].primaryCardsBackground,
+    inputBorder: "#cfd8dc",
+    labelColor: "#546e7a",
+    inputText: "#1a1d21",
+  };
+
   return (
     <div
       style={{
         ...styles.container,
-        background: colorApss[styleColor].primaryCardsBackground,
+        background: th.panelBg,
       }}
     >
       {fields.map((f, i) => (
         <div key={i} style={styles.field}>
-          <label style={styles.label}>{f.label}</label>
+          <label style={{ ...styles.label, color: th.labelColor }}>{f.label}</label>
           <input
             placeholder={f.label}
             value={f.value}
             onChange={(e) => f.onChange(e.target.value)}
-            style={styles.input}
+            style={{
+              ...styles.input,
+              borderColor: th.inputBorder,
+              color: th.inputText,
+              background: th.panelBg,
+            }}
             autoComplete="off"
           />
         </div>

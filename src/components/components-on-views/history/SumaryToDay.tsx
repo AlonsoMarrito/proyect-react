@@ -1,16 +1,38 @@
+import type { CSSProperties } from "react";
 import jsPDF from "jspdf";
 import logo from "../../../assets/logoApp.png";
+import { stripResumenHeading } from "../../../helpers/stripResumenHeading";
+
+type PreviewTheme = {
+  textColorPrimary: string;
+  panelBg: string;
+  panelBorder: string;
+  accent: string;
+  mutedText: string;
+  accentMuted: string;
+};
 
 type Props = {
   servicesHistory: any[];
   selectedDate: string;
+  theme?: PreviewTheme;
 };
 
 export default function DailySummaryPreview({
   servicesHistory,
   selectedDate,
+  theme,
 }: Props) {
   const servicesOfDay = [...servicesHistory].sort((a, b) => a.id - b.id);
+
+  const th = theme ?? {
+    textColorPrimary: "#1a1d21",
+    panelBg: "#fafafa",
+    panelBorder: "rgba(15, 23, 42, 0.09)",
+    accent: "#D32F2F",
+    mutedText: "#546e7a",
+    accentMuted: "rgba(211, 47, 47, 0.08)",
+  };
 
   const cleanText = (text: string) =>
     (text || "")
@@ -43,7 +65,7 @@ export default function DailySummaryPreview({
     addHeader();
 
     servicesOfDay.forEach((s) => {
-      const text = cleanText(s.summary);
+      const text = cleanText(stripResumenHeading(s.summary));
       const lines = doc.splitTextToSize(text, 120);
 
       doc.text(`Folio ${s.id}`, 20, y);
@@ -66,41 +88,97 @@ export default function DailySummaryPreview({
   };
 
   return (
-    <div style={styles.container}>
+    <div
+      style={{
+        ...styles.container,
+        color: th.textColorPrimary,
+        maxHeight: "100%",
+        overflowY: "auto",
+        overflowX: "hidden",
+        WebkitOverflowScrolling: "touch",
+      }}
+    >
       <div style={styles.header}>
-        <h2>PARTES DEL DÍA {selectedDate}</h2>
-
+        <h2 style={{ margin: "0 0 8px", fontSize: "1.15rem", fontWeight: 800 }}>
+          Partes del periodo
+        </h2>
+        <p style={{ margin: 0, color: th.mutedText, fontSize: 14 }}>
+          {selectedDate}
+        </p>
         {servicesOfDay.length > 0 && (
-          <button onClick={generatePDF}>Descargar PDF</button>
+          <button
+            type="button"
+            onClick={generatePDF}
+            style={{
+              ...styles.btn,
+              background: th.accent,
+              marginTop: 12,
+            }}
+          >
+            Descargar PDF
+          </button>
         )}
       </div>
 
-      {servicesOfDay.length === 0 && <p>No hay datos</p>}
+      {servicesOfDay.length === 0 && (
+        <p style={{ textAlign: "center", color: th.mutedText }}>
+          No hay datos en ese rango.
+        </p>
+      )}
 
       {servicesOfDay.map((s) => (
-        <div key={s.id} style={styles.card}>
-          <h3>Folio {s.id}</h3>
-          <p>{s.summary}</p>
+        <div
+          key={s.id}
+          style={{
+            ...styles.card,
+            background: th.panelBg,
+            border: `1px solid ${th.panelBorder}`,
+          }}
+        >
+          <h3 style={{ margin: "0 0 10px", fontSize: "1.12rem", fontWeight: 800 }}>
+            Folio {s.id}
+          </h3>
+          <p
+            style={{
+              margin: 0,
+              whiteSpace: "pre-wrap",
+              lineHeight: 1.55,
+              fontSize: "1.05rem",
+            }}
+          >
+            {stripResumenHeading(s.summary) || "—"}
+          </p>
         </div>
       ))}
     </div>
   );
 }
 
-const styles: Record<string, React.CSSProperties> = {
+const styles: Record<string, CSSProperties> = {
   container: {
-    width: "80%",
-    margin: "auto",
-    padding: "2rem",
+    width: "100%",
+    maxWidth: "720px",
+    margin: "0 auto",
+    padding: "0.5rem 0",
+    boxSizing: "border-box",
   },
   header: {
     textAlign: "center",
-    marginBottom: "20px",
+    marginBottom: "1.25rem",
+  },
+  btn: {
+    padding: "10px 18px",
+    borderRadius: 12,
+    border: "none",
+    color: "#fff",
+    cursor: "pointer",
+    fontWeight: 800,
+    fontSize: 14,
   },
   card: {
-    marginBottom: "20px",
-    padding: "10px",
-    border: "1px solid #ddd",
-    borderRadius: "8px",
+    marginBottom: "18px",
+    padding: "16px 18px",
+    borderRadius: 12,
+    boxShadow: "0 2px 8px rgba(15, 23, 42, 0.06)",
   },
 };

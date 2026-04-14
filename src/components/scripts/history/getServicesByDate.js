@@ -1,17 +1,16 @@
-const API_URL = import.meta.env.VITE_BACKEND_URL ?? import.meta.env.VUE_APP_API_URL
+import { getApiBaseUrl } from "./apiBase.js";
+
+const postJson = (path, dateBody) =>
+  fetch(getApiBaseUrl() + path, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(dateBody),
+  });
 
 export async function getServicesByDate(dateBody) {
     try {
-      const response = await fetch(
-        API_URL + "/folio/group-by-date",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(dateBody),
-        }
-      );
+      const response = await postJson("/folio/group-by-date", dateBody);
   
       if (!response.ok) {
         throw new Error(`Error en la petición: ${response.status}`);
@@ -28,16 +27,7 @@ export async function getServicesByDate(dateBody) {
   
   export async function getStatusServicesByDate(dateBody) {
     try {
-      const response = await fetch(
-        API_URL + "/folio/status-group-by-date",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(dateBody),
-        }
-      );
+      const response = await postJson("/folio/status-group-by-date", dateBody);
   
       if (!response.ok) {
         throw new Error(`Error en la petición: ${response.status}`);
@@ -54,15 +44,9 @@ export async function getServicesByDate(dateBody) {
 
   export async function getCologneByStatusServicesWithDate(dateBody, status) {
     try {
-      const response = await fetch(
-        API_URL + "/folio/cologne-group-by-date-status/"+status,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(dateBody),
-        }
+      const response = await postJson(
+        "/folio/cologne-group-by-date-status/" + status,
+        dateBody
       );
   
       if (!response.ok) {
@@ -80,15 +64,9 @@ export async function getServicesByDate(dateBody) {
 
   export async function getCologneServicesWithDate(dateBody, cologne) {
     try {
-      const response = await fetch(
-        API_URL + "/folio/cologne-group-by-date/"+cologne,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(dateBody),
-        }
+      const response = await postJson(
+        "/folio/cologne-group-by-date/" + cologne,
+        dateBody
       );
   
       if (!response.ok) {
@@ -105,17 +83,10 @@ export async function getServicesByDate(dateBody) {
   }
 
   export async function getStatusCologneServicesWithDate(dateBody, cologne) {
-    
     try {
-      const response = await fetch(
-        API_URL + "/folio/status-on-cologne-group-by-date/"+cologne,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(dateBody),
-        }
+      const response = await postJson(
+        "/folio/status-on-cologne-group-by-date/" + cologne,
+        dateBody
       );
   
       if (!response.ok) {

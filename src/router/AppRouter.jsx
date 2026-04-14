@@ -8,7 +8,9 @@ import TypeToVehicles from "../components/views/TypeToVehicles";
 import VehiclesByTypeView from "../components/views/VehiclesByTypeView";
 import VehicleMenuView from "../components/views/VehicleMenuView";
 import SummaryServicesView from "../components/views/summaryServices";
+import SumaryServiceDetailView from "../components/views/SumaryServiceDetailView";
 import ServiceMenuPrincipal from "../components/views/serviceMenuPrincipal";
+import StatisticsServicesLayout from "../components/views/statisticsServices/StatisticsServicesLayout";
 import WorkForceByGroupView from "../components/views/workForceByGroup";
 import WorkForcePersonView from "../components/views/workForcePersonView";
 
@@ -114,6 +116,17 @@ export default function AppRouter({ user, setUser }) {
       />
 
       <Route
+        path="/sumary-service/:folioId"
+        element={
+          user ? (
+            <SumaryServiceDetailView user={user} />
+          ) : (
+            <Navigate to="/" />
+          )
+        }
+      />
+
+      <Route
         path="/sumarys"
         element={
           user ? (
@@ -129,6 +142,17 @@ export default function AppRouter({ user, setUser }) {
         element={
           user ? (
             <ServiceMenuPrincipal user={user} />
+          ) : (
+            <Navigate to="/" />
+          )
+        }
+      />
+
+      <Route
+        path="/stadistics/*"
+        element={
+          user ? (
+            <StatisticsServicesLayout />
           ) : (
             <Navigate to="/" />
           )

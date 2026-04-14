@@ -41,7 +41,16 @@ function App() {
         </div>
       )}
 
-      <div style={{ flex: 1, overflow: "hidden" }}>
+      <div
+        style={{
+          flex: 1,
+          minHeight: 0,
+          height: "100%",
+          overflow: "hidden",
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
         <AppRouter user={user} setUser={setUser} />
       </div>
     </div>

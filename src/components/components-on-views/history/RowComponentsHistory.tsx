@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { Link } from "react-router-dom";
 
 import { getPreferences } from "../../scripts/preference/getPreference.js";
@@ -6,176 +6,272 @@ import { getAllInformationToVehicle } from "../../scripts/vehicle/generalInfoVeh
 import { getAllUser } from "../../scripts/user/getUser";
 import { getAllTypeToServices } from "../../scripts/typeToServices/getTypeToServices";
 import { getAllColognes } from "../../scripts/colognes/getColognes";
+import { stripResumenHeading } from "../../../helpers/stripResumenHeading";
+
+export type HistoryCardTheme = {
+  textColorPrimary: string;
+  panelBg: string;
+  panelBorder: string;
+  accent: string;
+  accentMuted: string;
+  tableHeadBg: string;
+  mutedText: string;
+  inputBorder: string;
+};
 
 type Props = {
   servicesHistory: any[];
+  theme?: HistoryCardTheme;
 };
 
-export default function RowHistory({ servicesHistory }: Props) {
+const FALLBACK_THEME: HistoryCardTheme = {
+  textColorPrimary: "#1a1d21",
+  panelBg: "#ffffff",
+  panelBorder: "rgba(15, 23, 42, 0.09)",
+  accent: "#D32F2F",
+  accentMuted: "rgba(211, 47, 47, 0.12)",
+  tableHeadBg: "#37474f",
+  mutedText: "#546e7a",
+  inputBorder: "#cfd8dc",
+};
+
+function statusStyle(status: string | undefined): {
+  bg: string;
+  color: string;
+  border: string;
+} {
+  const s = String(status ?? "").toLowerCase();
+  if (s.includes("curso"))
+    return { bg: "#fff3e0", color: "#e65100", border: "rgba(230, 81, 0, 0.35)" };
+  if (s.includes("cerr") || s.includes("final"))
+    return { bg: "#e8f5e9", color: "#2e7d32", border: "rgba(46, 125, 50, 0.35)" };
+  if (s.includes("cancel") || s.includes("falsa"))
+    return { bg: "#eceff1", color: "#546e7a", border: "rgba(84, 110, 122, 0.35)" };
+  if (s.includes("pend"))
+    return { bg: "#e3f2fd", color: "#1565c0", border: "rgba(21, 101, 192, 0.35)" };
+  return { bg: "#fce4ec", color: "#c2185b", border: "rgba(194, 24, 91, 0.25)" };
+}
+
+export default function RowHistory({ servicesHistory, theme: themeProp }: Props) {
+  const theme = themeProp ?? FALLBACK_THEME;
   const [styleColor, setStyleColor] = useState(0);
   const [vehicles, setVehicles] = useState<any>({});
   const [typeService, setTypeService] = useState<any[]>([]);
   const [usersMap, setUsersMap] = useState<any>({});
   const [colognes, setColognes] = useState<any[]>([]);
 
-  const colorApss = [
-    {
-      primaryCardsBackground: "#fff",
-      secondary: "#f5f5f5",
-      borderBottomDecoration: "#D32F2F",
-      textColorPrimary: "#2c2c2c",
-    },
-  ];
-
   useEffect(() => {
     (async () => {
       const pref = await getPreferences();
       setStyleColor(pref?.color ?? 0);
 
-      setTypeService(await getAllTypeToServices());
-      setColognes(await getAllColognes());
+      const types = await getAllTypeToServices();
+      setTypeService(Array.isArray(types) ? types : []);
+
+      const col = await getAllColognes();
+      setColognes(Array.isArray(col) ? col : []);
 
       const users = await getAllUser();
       const map: any = {};
-      users.forEach((u: any) => {
-        map[u.id] = `${u.first_name} ${u.last_name}`;
-      });
+      if (Array.isArray(users)) {
+        users.forEach((u: any) => {
+          map[u.id] = `${u.first_name} ${u.last_name}`;
+        });
+      }
       setUsersMap(map);
     })();
 
     (async () => {
       const v = await getAllInformationToVehicle();
       const map: any = {};
-      v.forEach((x: any) => (map[x.id] = x));
+      if (Array.isArray(v)) {
+        v.forEach((x: any) => (map[x.id] = x));
+      }
       setVehicles(map);
     })();
   }, []);
 
   const getTypeServiceName = (id: number) =>
-    typeService.find((t) => t.id === id)?.name ?? "Sin tipo";
+    typeService.find((t) => t.id === id)?.name ?? "—";
 
   const getCologneName = (id: number) =>
-    colognes.find((c) => Number(c.id) === Number(id))?.name ?? "Sin colonia";
+    colognes.find((c) => Number(c.id) === Number(id))?.name ?? "—";
 
   const getOperator = (arr: any[]) => {
-    if (!arr?.length) return "Sin unidad";
+    if (!arr?.length) return "—";
     const chofer = arr.find((p) => p.position_on_service === "chofer");
-    return usersMap[chofer?.id_user] ?? "Sin unidad";
+    return usersMap[chofer?.id_user] ?? "—";
   };
 
-  const filtered = useMemo(() => {
-    return servicesHistory.filter(
-      (s) => s.status?.toLowerCase() !== "en curso"
-    );
-  }, [servicesHistory]);
+  const tint =
+    styleColor === 1
+      ? "linear-gradient(135deg, rgba(198,40,40,0.05) 0%, rgba(255,255,255,0.96) 100%)"
+      : "linear-gradient(135deg, rgba(211,47,47,0.04) 0%, rgba(255,255,255,0.98) 100%)";
 
   return (
     <>
-      {filtered.map((item, index) => (
-        <Link
-          key={item.id + index}
-          to={`/sumary-service/${item.id}`}
-          style={{
-            ...styles.card,
-            background: colorApss[styleColor].primaryCardsBackground,
-          }}
-        >
-          <div style={styles.rowTop}>
-            <div style={styles.cell}>
-              <h5 style={styles.folio}>Folio: {item.id}</h5>
+      {servicesHistory.map((item, index) => {
+        const st = statusStyle(item.status);
+        return (
+          <Link
+            key={`${item.id}-${index}`}
+            to={`/sumary-service/${item.id}`}
+            style={{
+              ...styles.card,
+              background: tint,
+              border: `1px solid ${theme.panelBorder}`,
+              color: theme.textColorPrimary,
+            }}
+          >
+            <div
+              style={{
+                ...styles.accentPin,
+                background: `linear-gradient(180deg, ${theme.accent}, ${theme.tableHeadBg})`,
+              }}
+            />
+            <div style={styles.cardBody}>
+              <div style={styles.topRow}>
+                <span
+                  style={{
+                    ...styles.folioBadge,
+                    background: theme.accentMuted,
+                    color: theme.accent,
+                    border: `1px solid ${theme.inputBorder}`,
+                  }}
+                >
+                  #{item.id}
+                </span>
+                <span style={{ ...styles.metaStrong, color: theme.textColorPrimary }}>
+                  {getTypeServiceName(item.id_type_service)}
+                </span>
+                <span style={{ color: theme.mutedText, fontSize: 18 }}>
+                  U-{vehicles[item.vehicle_id]?.number_unit ?? "—"}
+                </span>
+                <span style={{ color: theme.mutedText, fontSize: 18 }}>
+                  {getCologneName(item.id_cologne)}
+                </span>
+                <span style={{ color: theme.mutedText, fontSize: 18 }}>
+                  {item.date_to_open?.slice(0, 10) ?? "—"}
+                </span>
+              </div>
+              <div style={styles.bottomRow}>
+                <span
+                  style={{
+                    ...styles.chip,
+                    background: st.bg,
+                    color: st.color,
+                    border: `1px solid ${st.border}`,
+                  }}
+                >
+                  {String(item.status ?? "—").toUpperCase()}
+                </span>
+                <span
+                  style={{
+                    ...styles.chipLight,
+                    border: `1px solid ${theme.inputBorder}`,
+                    color: theme.textColorPrimary,
+                  }}
+                >
+                  Op.: {getOperator(item.personal_on_a_service)}
+                </span>
+                <span
+                  style={{
+                    ...styles.chipLight,
+                    border: `1px solid ${theme.inputBorder}`,
+                    color: theme.mutedText,
+                  }}
+                >
+                  {item.time_to_open?.slice(11, 19) ?? "—"}
+                </span>
+              </div>
+              <div
+                style={{
+                  ...styles.summaryBox,
+                  border: `1px solid ${theme.inputBorder}`,
+                  background: theme.panelBg,
+                  color: theme.textColorPrimary,
+                }}
+              >
+                {stripResumenHeading(item.summary) || "—"}
+              </div>
             </div>
-
-            <div style={styles.cell}>
-              <h6 style={styles.label}>Tipo:</h6>
-              <p style={styles.value}>{getTypeServiceName(item.id_type_service)}</p>
-            </div>
-
-            <div style={styles.cell}>
-              <h6 style={styles.label}>Unidad:</h6>
-              <p style={styles.value}>{vehicles[item.vehicle_id]?.number_unit ?? "Sin unidad"}</p>
-            </div>
-
-            <div style={styles.cell}>
-              <h6 style={styles.label}>Colonia:</h6>
-              <p style={styles.value}>{getCologneName(item.id_cologne)}</p>
-            </div>
-
-            <div style={styles.cell}>
-              <h6 style={styles.label}>Fecha:</h6>
-              <p style={styles.value}>{item.date_to_open?.slice(0, 10)}</p>
-            </div>
-          </div>
-
-          <div style={styles.rowBottom}>
-            <div style={styles.meta}>Operador: {getOperator(item.personal_on_a_service)}</div>
-            <div style={styles.meta}>Hora: {item.time_to_open?.slice(11, 19)}</div>
-            <div style={styles.meta}>Estado: {item.status?.toUpperCase()}</div>
-          </div>
-        </Link>
-      ))}
+          </Link>
+        );
+      })}
     </>
   );
 }
 
-const textBlack = "#000000";
-
 const styles: Record<string, CSSProperties> = {
   card: {
-    width: "100%",
-    maxWidth: "100%",
-    boxSizing: "border-box",
-    display: "flex",
-    flexDirection: "column",
-    borderRadius: "12px",
-    border: "1px solid rgba(0, 0, 0, 0.08)",
-    marginBottom: "14px",
-    padding: "14px 16px",
+    position: "relative",
+    display: "block",
+    borderRadius: 16,
+    marginBottom: 16,
+    paddingLeft: 14,
     textDecoration: "none",
-    color: textBlack,
-    boxShadow: "0 2px 8px rgba(0, 0, 0, 0.06), 0 4px 16px rgba(0, 0, 0, 0.08)",
+    boxShadow: "0 2px 8px rgba(15, 23, 42, 0.08)",
+    overflow: "hidden",
+    boxSizing: "border-box",
   },
-  rowTop: {
+  accentPin: {
+    position: "absolute",
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 12,
+    borderRadius: "16px 0 0 16px",
+  },
+  cardBody: {
+    padding: "22px 24px 22px 16px",
+  },
+  topRow: {
     display: "flex",
-    justifyContent: "space-between",
     flexWrap: "wrap",
-    gap: "12px",
+    alignItems: "center",
+    gap: "12px 16px",
+    marginBottom: 12,
   },
-  cell: {
-    minWidth: "min(120px, 100%)",
+  folioBadge: {
+    fontSize: 18,
+    fontWeight: 800,
+    padding: "6px 14px",
+    borderRadius: 9,
   },
-  folio: {
-    margin: 0,
-    fontSize: "1rem",
+  metaStrong: {
+    fontSize: 19,
     fontWeight: 700,
-    color: textBlack,
   },
-  label: {
-    margin: "0 0 4px 0",
-    fontSize: "0.7rem",
-    fontWeight: 700,
-    color: textBlack,
-    textTransform: "uppercase",
-    letterSpacing: "0.04em",
-  },
-  value: {
-    margin: 0,
-    fontSize: "0.9rem",
-    fontWeight: 500,
-    color: textBlack,
-    lineHeight: 1.35,
-  },
-  rowBottom: {
+  bottomRow: {
     display: "flex",
-    justifyContent: "space-between",
     flexWrap: "wrap",
-    gap: "10px",
-    marginTop: "14px",
-    paddingTop: "12px",
-    borderTop: "1px solid rgba(0, 0, 0, 0.08)",
+    gap: 10,
+    alignItems: "center",
   },
-  meta: {
-    fontSize: "0.85rem",
-    fontWeight: 500,
-    color: textBlack,
+  chip: {
+    fontSize: 14,
+    fontWeight: 800,
+    padding: "7px 14px",
+    borderRadius: 999,
+    letterSpacing: "0.02em",
+  },
+  chipLight: {
+    fontSize: 14,
+    fontWeight: 700,
+    padding: "7px 14px",
+    borderRadius: 999,
+    background: "rgba(15, 23, 42, 0.04)",
+  },
+  summaryBox: {
+    marginTop: 12,
+    padding: "12px 14px",
+    borderRadius: 10,
+    fontSize: 15,
+    lineHeight: 1.5,
+    whiteSpace: "pre-wrap",
+    wordBreak: "break-word",
+    maxHeight: "6.75rem",
+    overflow: "hidden",
+    boxSizing: "border-box",
   },
 };
