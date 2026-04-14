@@ -1,5 +1,7 @@
 const API_URL = import.meta.env.VITE_BACKEND_URL ?? import.meta.env.VUE_APP_API_URL
 
+const fetchOpts = { credentials: "include" };
+
 export async function createNewService(dateBody) {
     try {
       const response = await fetch(
@@ -9,6 +11,7 @@ export async function createNewService(dateBody) {
           headers: {
             "Content-Type": "application/json",
           },
+          ...fetchOpts,
           body: JSON.stringify(dateBody),
         }
       );
@@ -29,9 +32,14 @@ export async function createNewService(dateBody) {
           headers: {
             "Content-Type": "application/json",
           },
+          ...fetchOpts,
           body: JSON.stringify(dateBody),
         }
       );
+      if (!response.ok) {
+        console.error("updateDataNewService", response.status, await response.text());
+        return null;
+      }
       const service = await response.json();
       return service;
     } catch (err) {
@@ -49,9 +57,14 @@ export async function createNewService(dateBody) {
           headers: {
             "Content-Type": "application/json",
           },
+          ...fetchOpts,
           body: JSON.stringify(dateBody),
         }
       );
+      if (!response.ok) {
+        console.error("closeDataNewService", response.status, await response.text());
+        return null;
+      }
       const service = await response.json();
       return service;
     } catch (err) {
@@ -69,9 +82,14 @@ export async function createNewService(dateBody) {
           headers: {
             "Content-Type": "application/json",
           },
+          ...fetchOpts,
           body: JSON.stringify(dateBody),
         }
       );
+      if (!response.ok) {
+        console.error("addedSumaryService", response.status, await response.text());
+        return null;
+      }
       const service = await response.json();
       return service;
     } catch (err) {

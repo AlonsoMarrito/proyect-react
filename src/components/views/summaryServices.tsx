@@ -573,7 +573,7 @@ const styles: Record<string, CSSProperties> = {
     flex: "3 1 400px",
     minWidth: 0,
     minHeight: 0,
-    maxHeight: "calc(100vh - 100px)",
+    maxHeight: "calc((100vh - 100px) * 0.86821875)",
     borderRadius: 12,
     padding: "10px 12px",
     overflowY: "auto",

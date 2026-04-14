@@ -1,6 +1,5 @@
 import React, { useEffect, useState, type CSSProperties } from "react";
 import { Link, useParams } from "react-router-dom";
-import Swal from "sweetalert2";
 
 import { getPreferences } from "../scripts/preference/getPreference";
 import {
@@ -8,6 +7,13 @@ import {
   getTypeVehicle,
 } from "../scripts/vehicle/generalInfoVehicle/getVehicles";
 import dumieImg from "../../assets/vehiclesUnitImg/dumie.png";
+import ViewAllDataFromVehicleModal from "../components-on-views/vehicles/ViewAllDataFromVehicleModal";
+import ReceptionLogsVehicleSection from "../components-on-views/vehicles/ReceptionLogsVehicleSection";
+import ServiceAndDangersVehicleSection from "../components-on-views/vehicles/ServiceAndDangersVehicleSection";
+import {
+  GENERAL_INSPECTION_BUTTONS,
+  type ReceptionCategoryKey,
+} from "../components-on-views/vehicles/vehicleReceptionCategories";
 
 type PageTheme = {
   textColorPrimary: string;
@@ -58,18 +64,18 @@ type VehicleData = Record<string, unknown> | null;
 const TABS = [
   { id: 1, label: "Información general" },
   { id: 2, label: "Bitácora de recepción" },
-  { id: 3, label: "Mantenimiento e incidentes" },
+  { id: 3, label: "Bitácora de mantenimiento e incidentes" },
 ] as const;
 
-/** Panel de vistas del vehículo (+20% sobre la versión anterior) */
+/** Panel de vistas del vehículo (~20% más alto que la versión compacta anterior) */
 const vehiclePhotoPanelBase: CSSProperties = {
-  flex: "2 1 432px",
+  flex: "2 1 518px",
   display: "flex",
   flexWrap: "nowrap",
   gap: "12px",
   justifyContent: "center",
   alignItems: "center",
-  maxHeight: "min(432px, 62vh)",
+  maxHeight: "min(384px, 50vh)",
   minHeight: 0,
   padding: "12px",
   boxSizing: "border-box",
@@ -81,14 +87,14 @@ const imgTopView: CSSProperties = {
   width: "28%",
   minWidth: "106px",
   maxWidth: "32%",
-  maxHeight: "min(384px, 53vh)",
+  maxHeight: "min(336px, 43vh)",
   height: "auto",
   objectFit: "contain",
 };
 
 const imgStackPair: CSSProperties = {
   width: "100%",
-  maxHeight: "min(182px, 24vh)",
+  maxHeight: "min(168px, 22vh)",
   height: "auto",
   objectFit: "contain",
 };
@@ -114,6 +120,7 @@ export default function VehicleMenuView(_props: { user?: unknown }) {
   const [vehicle, setVehicle] = useState<VehicleData>(null);
   const [typeName, setTypeName] = useState("");
   const [loading, setLoading] = useState(true);
+  const [inspectCategory, setInspectCategory] = useState<ReceptionCategoryKey | null>(null);
 
   const theme = colorApss[styleColor] ?? colorApss[0];
 
@@ -159,21 +166,13 @@ export default function VehicleMenuView(_props: { user?: unknown }) {
     return typeof u === "string" && u.length > 0 ? u : dumieImg;
   };
 
-  const damageSoon = (label: string) => {
-    void Swal.fire({
-      icon: "info",
-      title: label,
-      text: "Módulo de inspección: conectar con el backend (original Vue).",
-      confirmButtonColor: theme.accent,
-    });
-  };
-
   if (loading) {
     return (
       <div
         style={{
-          minHeight: "100vh",
-          padding: "2rem",
+          minHeight: "100dvh",
+          padding: "2rem 2rem 5vh",
+          boxSizing: "border-box",
           textAlign: "center",
           background: theme.pageBg,
           color: theme.textColorPrimary,
@@ -188,8 +187,9 @@ export default function VehicleMenuView(_props: { user?: unknown }) {
     return (
       <div
         style={{
-          minHeight: "100vh",
-          padding: "2rem",
+          minHeight: "100dvh",
+          padding: "2rem 2rem 5vh",
+          boxSizing: "border-box",
           textAlign: "center",
           background: theme.pageBg,
           color: theme.textColorPrimary,
@@ -212,12 +212,17 @@ export default function VehicleMenuView(_props: { user?: unknown }) {
   return (
     <div
       style={{
-        minHeight: "100vh",
+        height: "100dvh",
+        maxHeight: "100dvh",
         width: "100%",
-        padding: "0.75rem clamp(0.75rem, 2vw, 1.25rem)",
+        padding:
+          "0.75rem max(8px, env(safe-area-inset-right, 0px)) 5vh max(8px, env(safe-area-inset-left, 0px))",
         boxSizing: "border-box",
         background: theme.pageBg,
         color: theme.textColorPrimary,
+        display: "flex",
+        flexDirection: "column",
+        overflow: "hidden",
       }}
     >
       <style>
@@ -240,8 +245,10 @@ export default function VehicleMenuView(_props: { user?: unknown }) {
           justifyContent: "center",
           alignItems: "center",
           gap: "8px",
-          maxWidth: "min(1680px, 98vw)",
+          width: "100%",
+          maxWidth: "100%",
           margin: "0 auto 8px",
+          flexShrink: 0,
         }}
       >
         {TABS.map((t) => (
@@ -289,8 +296,10 @@ export default function VehicleMenuView(_props: { user?: unknown }) {
           display: "none",
           flexDirection: "column",
           gap: "10px",
-          maxWidth: "min(1680px, 98vw)",
+          width: "100%",
+          maxWidth: "100%",
           margin: "0 auto 12px",
+          flexShrink: 0,
         }}
       >
         <Link
@@ -338,10 +347,12 @@ export default function VehicleMenuView(_props: { user?: unknown }) {
           alignItems: "center",
           flexWrap: "wrap",
           gap: "12px",
-          maxWidth: "min(1680px, 98vw)",
+          width: "100%",
+          maxWidth: "100%",
           margin: "0 auto 12px",
           padding: "12px 0",
           borderTop: `3px solid ${theme.accentMuted}`,
+          flexShrink: 0,
         }}
       >
         <h1 style={{ margin: 0, fontSize: "1.5rem", fontWeight: 800 }}>
@@ -364,8 +375,16 @@ export default function VehicleMenuView(_props: { user?: unknown }) {
 
       <div
         style={{
-          maxWidth: "min(1680px, 98vw)",
-          margin: "0 auto",
+          flex: 1,
+          minHeight: 0,
+          width: "100%",
+          maxWidth: "100%",
+          margin: 0,
+          display: "flex",
+          flexDirection: "column",
+          overflowY: "auto",
+          overflowX: "hidden",
+          WebkitOverflowScrolling: "touch",
         }}
       >
         {tab === 1 && (
@@ -419,7 +438,7 @@ export default function VehicleMenuView(_props: { user?: unknown }) {
 
             <div
               style={{
-                flex: "1 1 260px",
+                flex: "1 1 312px",
                 background: theme.panelBg,
                 border: `1px solid ${theme.panelBorder}`,
                 borderRadius: "16px",
@@ -448,18 +467,11 @@ export default function VehicleMenuView(_props: { user?: unknown }) {
                   gap: "8px",
                 }}
               >
-                {[
-                  "Luces",
-                  "Carrocería",
-                  "Tapones fluidos",
-                  "Estado de llantas",
-                  "Arranque de motor",
-                  "Herramientas y equipos",
-                ].map((label) => (
+                {GENERAL_INSPECTION_BUTTONS.map(({ label, category }) => (
                   <button
-                    key={label}
+                    key={category}
                     type="button"
-                    onClick={() => damageSoon(label)}
+                    onClick={() => setInspectCategory(category)}
                     style={{
                       padding: "10px 12px",
                       borderRadius: "10px",
@@ -480,47 +492,28 @@ export default function VehicleMenuView(_props: { user?: unknown }) {
         )}
 
         {tab === 2 && (
-          <PanelPlaceholder
-            theme={theme}
-            title="Bitácora de recepción"
-            text="Aquí se listan los registros de recepción de la unidad (conecta la API como en el proyecto Vue)."
-          />
+          <ReceptionLogsVehicleSection numberVehicle={numberVehicle} theme={theme} />
         )}
 
         {tab === 3 && (
-          <PanelPlaceholder
-            theme={theme}
-            title="Mantenimiento e incidentes"
-            text="Bitácora de servicio, mantenimiento e incidentes (misma API que `serviceAndDangersVehicle.vue`)."
-          />
+          <ServiceAndDangersVehicleSection numberVehicle={numberVehicle} theme={theme} />
         )}
       </div>
-    </div>
-  );
-}
 
-function PanelPlaceholder({
-  theme,
-  title,
-  text,
-}: {
-  theme: PageTheme;
-  title: string;
-  text: string;
-}) {
-  return (
-    <div
-      style={{
-        background: theme.panelBg,
-        border: `1px solid ${theme.panelBorder}`,
-        borderRadius: "16px",
-        padding: "1.5rem",
-        boxShadow: theme.panelShadow,
-        minHeight: "200px",
-      }}
-    >
-      <h3 style={{ margin: "0 0 10px", color: theme.textColorPrimary }}>{title}</h3>
-      <p style={{ margin: 0, color: theme.mutedText, lineHeight: 1.5 }}>{text}</p>
+      {inspectCategory != null && (
+        <ViewAllDataFromVehicleModal
+          numberVehicle={numberVehicle}
+          showAt={inspectCategory}
+          onClose={() => setInspectCategory(null)}
+          theme={{
+            textColorPrimary: theme.textColorPrimary,
+            panelBg: theme.panelBg,
+            panelBorder: theme.panelBorder,
+            accent: theme.accent,
+            mutedText: theme.mutedText,
+          }}
+        />
+      )}
     </div>
   );
 }

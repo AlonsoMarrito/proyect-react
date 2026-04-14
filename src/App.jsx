@@ -33,10 +33,19 @@ function App() {
         overflow: "hidden",
       }}
     >
-      {user && <BarNav onToggleMenu={() => {}} />}
+      {user && (
+        <BarNav sessionUser={user} onLogoutSuccess={() => setUser(null)} />
+      )}
 
       {user && (
-        <div style={{ width: "100%", flexShrink: 0 }}>
+        <div
+          style={{
+            width: "100%",
+            flexShrink: 0,
+            position: "relative",
+            zIndex: 10100,
+          }}
+        >
           <SideBar user={user} />
         </div>
       )}

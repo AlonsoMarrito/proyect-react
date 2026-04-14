@@ -93,6 +93,7 @@ export default function DailySummaryPreview({
         ...styles.container,
         color: th.textColorPrimary,
         maxHeight: "100%",
+        minHeight: 0,
         overflowY: "auto",
         overflowX: "hidden",
         WebkitOverflowScrolling: "touch",

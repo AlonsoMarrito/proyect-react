@@ -6,7 +6,8 @@ export async function getColums(category, numberUnit) {
   try {
     const dataUnit = await getTypeVehicle(numberUnit);
     const response = await fetch(
-      `${API_URL}/vehicle-registration/vehicle-logs-${category}/${dataUnit.id}`
+      `${API_URL}/vehicle-registration/vehicle-logs-${category}/${dataUnit.id}`,
+      { credentials: "include" }
     );
     if (!response.ok) throw new Error(`Error en la petición: ${response.status}`);
 

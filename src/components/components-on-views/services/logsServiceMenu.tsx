@@ -1,13 +1,24 @@
 import React, { useEffect, useRef, useState } from "react";
 import ModalReportDamage from "../vehiculos/modalReportDamage";
 import ModalChangeDatasToService from "../vehiculos/modalChangeDatasToService";
-import { getLastOnServicesHistory, getOneServicesHistory } from "../../scripts/history/getAllHistory";
+import {
+  getAllTypeServices,
+  getLastOnServicesHistory,
+  getOneServicesHistory,
+} from "../../scripts/history/getAllHistory";
 import { getKilometerTypeVehicle, getVehicleById } from "../../scripts/vehicle/generalInfoVehicle/getVehicles";
 import { getWorkForceByDayForService, getWorkForceByDayAndUser, puzzleForWorkForce } from "../../scripts/workforce/getPersonal";
 import { getAllTypeToServices } from "../../scripts/typeToServices/getTypeToServices";
 import { authUser } from "../../scripts/user/authUser";
 import { getServiceActiveByUnid } from "../../scripts/history/getServiceByUnid";
-import { closeDataNewService, createNewService, updateDataNewService } from "../../scripts/history/addNewService";
+import {
+  addedSumaryService,
+  closeDataNewService,
+  createNewService,
+  updateDataNewService,
+} from "../../scripts/history/addNewService";
+import { createSummaryService } from "../../scripts/history/summaryService";
+import { getUserById } from "../../scripts/user/getUser";
 import { getAllColognes } from "../../scripts/colognes/getColognes";
 
 export default function LogsServiceVehicle() {
@@ -50,6 +61,20 @@ export default function LogsServiceVehicle() {
 
   const typeServiceBox = useRef<any>(null);
   const cologneBox = useRef<any>(null);
+
+  const typeServicesRef = useRef<any[]>([]);
+  const allColognesRef = useRef<any[]>([]);
+  const searchTypeRef = useRef("");
+  const searchCologneRef = useRef("");
+  const typeServiceSelectedRef = useRef<any>(null);
+  const cologneSelectedRef = useRef<any>(null);
+
+  typeServicesRef.current = typeServices;
+  allColognesRef.current = allColognes;
+  searchTypeRef.current = searchTypeService;
+  searchCologneRef.current = searchCologne;
+  typeServiceSelectedRef.current = typeServiceSelected;
+  cologneSelectedRef.current = cologneSelected;
 
   useEffect(() => {
     const handleClickOutside = (event: any) => {
@@ -121,6 +146,9 @@ export default function LogsServiceVehicle() {
 
         const kmData = await getKilometerTypeVehicle(vehicle.number_unit);
         setDataVehicle(kmData);
+        if (kmData == null) {
+          return;
+        }
 
         let puzzle = await getWorkForceByDayAndUser(dateForState, kmData.idUnit);
         if (!Array.isArray(puzzle) || puzzle.length === 0) {
@@ -162,12 +190,39 @@ export default function LogsServiceVehicle() {
 
   const validateTypeService = () => {
     setTimeout(() => {
-      const match = (typeServices || []).find((item: any) => item?.name === searchTypeService);
-      if (!match) {
+      const text = String(searchTypeRef.current ?? "").trim();
+      const types = typeServicesRef.current || [];
+      const selId = typeServiceSelectedRef.current;
+
+      if (!text) {
         setSearchTypeService("");
         setTypeServiceSelected(null);
+        return;
       }
-    }, 150);
+
+      if (selId != null && selId !== "") {
+        const byId = types.find((item: any) => Number(item?.id) === Number(selId));
+        if (
+          byId &&
+          String(byId.name ?? "").trim().toLowerCase() === text.toLowerCase()
+        ) {
+          return;
+        }
+      }
+
+      const match = types.find(
+        (item: any) =>
+          String(item?.name ?? "").trim().toLowerCase() === text.toLowerCase()
+      );
+      if (match) {
+        setTypeServiceSelected(match.id ?? null);
+        setSearchTypeService(String(match.name ?? ""));
+        return;
+      }
+
+      setSearchTypeService("");
+      setTypeServiceSelected(null);
+    }, 0);
   };
 
   const filterColognes = (value: string) => {
@@ -185,12 +240,39 @@ export default function LogsServiceVehicle() {
 
   const validateCologne = () => {
     setTimeout(() => {
-      const match = (allColognes || []).find((item: any) => item?.name === searchCologne);
-      if (!match) {
+      const text = String(searchCologneRef.current ?? "").trim();
+      const cols = allColognesRef.current || [];
+      const selId = cologneSelectedRef.current;
+
+      if (!text) {
         setSearchCologne("");
         setCologneSelected(null);
+        return;
       }
-    }, 150);
+
+      if (selId != null && selId !== "") {
+        const byId = cols.find((item: any) => Number(item?.id) === Number(selId));
+        if (
+          byId &&
+          String(byId.name ?? "").trim().toLowerCase() === text.toLowerCase()
+        ) {
+          return;
+        }
+      }
+
+      const match = cols.find(
+        (item: any) =>
+          String(item?.name ?? "").trim().toLowerCase() === text.toLowerCase()
+      );
+      if (match) {
+        setCologneSelected(match.id ?? null);
+        setSearchCologne(String(match.name ?? ""));
+        return;
+      }
+
+      setSearchCologne("");
+      setCologneSelected(null);
+    }, 0);
   };
 
   const changeStatusService = async (status: number) => {
@@ -220,31 +302,63 @@ export default function LogsServiceVehicle() {
       }
       case 2: {
         const data = await getOneServicesHistory(noConsecutive);
+
+        let tid: number | null | undefined = typeServiceSelected;
+        let cid: number | null | undefined = cologneSelected;
+        let folio = folioWrite;
+        let stret = streetAndNumberWrite;
+        let crossing = crossWrite;
+        let reporter = reporterWrite;
+        let phone = phoneWrite;
+        let colLabel = searchCologne;
+
         if (data?.folio !== undefined && data?.folio !== null) {
-          setTypeServiceSelected(data.id_type_service ?? null);
-          const typeMatch = (typeServices || []).find((item: any) => item.id === data.id_type_service);
+          tid = data.id_type_service ?? null;
+          cid = data.id_cologne ?? null;
+          setTypeServiceSelected(tid);
+          const typeMatch = (typeServices || []).find(
+            (item: any) => Number(item?.id) === Number(data.id_type_service)
+          );
           if (typeMatch) setSearchTypeService(typeMatch.name);
           setFolioWrite(data.folio || "");
-          setCologneSelected(data.id_cologne ?? null);
-          const cologneMatch = (allColognes || []).find((item: any) => item.id === data.id_cologne);
+          setCologneSelected(cid);
+          const cologneMatch = (allColognes || []).find(
+            (item: any) => Number(item?.id) === Number(data.id_cologne)
+          );
           if (cologneMatch) setSearchCologne(cologneMatch.name);
           setStreetAndNumberWrite(data.stret || "");
           setCrossWrite(data.crossing || "");
           setReporterWrite(data.reporter || "");
           setPhoneWrite(data.phone_reporter || "");
+
+          folio = String(data.folio ?? "");
+          stret = String(data.stret ?? "");
+          crossing = String(data.crossing ?? "");
+          reporter = String(data.reporter ?? "");
+          phone = String(data.phone_reporter ?? "");
+          colLabel = cologneMatch?.name
+            ? String(cologneMatch.name)
+            : searchCologne;
         }
 
-        if (typeServiceSelected && cologneSelected && searchCologne && streetAndNumberWrite && crossWrite && reporterWrite) {
+        if (
+          tid != null &&
+          cid != null &&
+          String(colLabel ?? "").trim() &&
+          String(stret ?? "").trim() &&
+          String(crossing ?? "").trim() &&
+          String(reporter ?? "").trim()
+        ) {
           setServiceStatus("Start");
           setSelectEstatus("EN CURSO");
           await updateDataNewService(noConsecutive, {
-            id_type_service: typeServiceSelected,
-            folio: folioWrite,
-            id_cologne: cologneSelected,
-            stret: streetAndNumberWrite,
-            crossing: crossWrite,
-            reporter: reporterWrite,
-            phone_reporter: phoneWrite,
+            id_type_service: tid,
+            folio,
+            id_cologne: cid,
+            stret,
+            crossing,
+            reporter,
+            phone_reporter: phone,
           });
         }
         break;
@@ -252,26 +366,125 @@ export default function LogsServiceVehicle() {
       case 3: {
         const closeKm = Number(closeKilometers);
         const openKm = Number(dataVehicle.kilometers);
-        if (
-          (typeClose && generalConclusion && closeKilometers && selectEstatus !== "EN CURSO" && closeKm > openKm) ||
+        const canClose =
+          (typeClose &&
+            generalConclusion &&
+            closeKilometers &&
+            selectEstatus !== "EN CURSO" &&
+            closeKm > openKm) ||
           selectEstatus === "FALSA ALARMA" ||
-          selectEstatus === "CANCELADO"
-        ) {
-          const now = new Date();
-          const dateToClose = now.toLocaleDateString("sv-SE", { timeZone: "America/Mexico_City" });
-          const timeToClose = now.toLocaleTimeString("sv-SE", { timeZone: "America/Mexico_City", hour12: false });
-          await closeDataNewService(noConsecutive, {
-            close_type: typeClose,
-            general_and_conclusion: generalConclusion,
-            close_kilometers: closeKm,
-            kilometers_traveled: closeKm - openKm,
-            status: String(selectEstatus).toLowerCase(),
-            date_to_close: `${dateToClose}T00:00:00.000Z`,
-            time_to_close: `1900-01-01T${timeToClose}.000Z`,
-          });
-          setServiceStatus("Close");
-          setSelectEstatus("nulo");
+          selectEstatus === "CANCELADO";
+
+        if (!canClose) {
+          break;
         }
+
+        const now = new Date();
+        const dateToClose = now.toLocaleDateString("sv-SE", {
+          timeZone: "America/Mexico_City",
+        });
+        const timeToClose = now.toLocaleTimeString("sv-SE", {
+          timeZone: "America/Mexico_City",
+          hour12: false,
+        });
+
+        const closed = await closeDataNewService(noConsecutive, {
+          close_type: typeClose,
+          general_and_conclusion: generalConclusion,
+          close_kilometers: closeKm,
+          kilometers_traveled: closeKm - openKm,
+          status: String(selectEstatus).toLowerCase(),
+          date_to_close: `${dateToClose}T00:00:00.000Z`,
+          time_to_close: `1900-01-01T${timeToClose}.000Z`,
+        });
+
+        if (closed == null) {
+          console.error("No se pudo cerrar el servicio");
+          break;
+        }
+
+        try {
+          const serviceRow = await getOneServicesHistory(noConsecutive);
+          if (serviceRow && typeof serviceRow === "object") {
+            let typeList = await getAllTypeServices();
+            if (!Array.isArray(typeList)) typeList = [];
+            const typeRow = typeList.find(
+              (ts: { id?: unknown }) =>
+                Number(ts?.id) ===
+                Number((serviceRow as { id_type_service?: unknown }).id_type_service)
+            );
+            const nameService =
+              typeRow?.name != null ? String(typeRow.name) : "Servicio";
+
+            const personal = (
+              (serviceRow as { personal_on_a_service?: Array<{ id_user?: number; position_on_service?: string }> })
+                .personal_on_a_service || []
+            );
+
+            const choferEntry = personal.find(
+              (ps) =>
+                String(ps.position_on_service ?? "").toLowerCase() === "chofer"
+            );
+            let choferName = "";
+            if (choferEntry?.id_user != null) {
+              const chofer = await getUserById(choferEntry.id_user);
+              const c = Array.isArray(chofer) ? chofer[0] : chofer;
+              if (c && typeof c === "object") {
+                choferName =
+                  `${(c as { first_name?: string }).first_name ?? ""} ${(c as { last_name?: string }).last_name ?? ""}`.trim();
+              }
+            }
+
+            const tripulantesIds = personal
+              .filter(
+                (p) =>
+                  String(p.position_on_service ?? "").toLowerCase() !== "chofer"
+              )
+              .map((p) => p.id_user)
+              .filter((id): id is number => id != null);
+
+            const tripulantesData = await Promise.all(
+              tripulantesIds.map((id) => getUserById(id))
+            );
+
+            const tripulacionResumida = tripulantesData
+              .map((u) => {
+                const row = Array.isArray(u) ? u[0] : u;
+                if (!row || typeof row !== "object") return "";
+                return `${(row as { first_name?: string }).first_name ?? ""} ${(row as { last_name?: string }).last_name ?? ""}`.trim();
+              })
+              .filter(Boolean);
+
+            const summaryText = await createSummaryService(
+              serviceRow,
+              dataVehicle.number_unit,
+              nameService,
+              choferName,
+              tripulacionResumida
+            );
+
+            if (summaryText && String(summaryText).trim()) {
+              await addedSumaryService(noConsecutive, { summary: summaryText });
+            }
+          }
+        } catch (e) {
+          console.error("Error al generar o guardar el resumen del servicio:", e);
+        }
+
+        setServiceStatus("Close");
+        setSearchTypeService("");
+        setFolioWrite("");
+        setSearchCologne("");
+        setStreetAndNumberWrite("");
+        setCrossWrite("");
+        setReporterWrite("");
+        setPhoneWrite("");
+        setTypeClose("");
+        setGeneralConclusion("");
+        setCloseKilometers("");
+        setSelectEstatus("nulo");
+        setTypeServiceSelected(null);
+        setCologneSelected(null);
         break;
       }
       case 4:
@@ -347,7 +560,12 @@ export default function LogsServiceVehicle() {
           {showOptions && filteredTypeServices.length > 0 && (
             <div className="autocomplete-dropdown">
               {filteredTypeServices.map((item: any) => (
-                <div key={item.id} className="autocomplete-item" onClick={() => selectTypeService(item)}>
+                <div
+                  key={item.id}
+                  className="autocomplete-item"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => selectTypeService(item)}
+                >
                   {item.name}
                 </div>
               ))}
@@ -366,7 +584,12 @@ export default function LogsServiceVehicle() {
           {showCologneOptions && filteredColognes.length > 0 && (
             <div className="autocomplete-dropdown">
               {filteredColognes.map((item: any) => (
-                <div key={item.id} className="autocomplete-item" onClick={() => selectCologne(item)}>
+                <div
+                  key={item.id}
+                  className="autocomplete-item"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => selectCologne(item)}
+                >
                   {item.name}
                 </div>
               ))}

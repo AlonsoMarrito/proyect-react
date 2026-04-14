@@ -13,6 +13,12 @@ import ServiceMenuPrincipal from "../components/views/serviceMenuPrincipal";
 import StatisticsServicesLayout from "../components/views/statisticsServices/StatisticsServicesLayout";
 import WorkForceByGroupView from "../components/views/workForceByGroup";
 import WorkForcePersonView from "../components/views/workForcePersonView";
+import DevSoporteInternoView from "../components/views/DevSoporteInternoView";
+import {
+  RequireDevUser,
+  RequireOperationalUser,
+  RequirePartesOrEstadisticas,
+} from "./RouteGuards";
 
 /** Rutas antiguas con guion → mismas vistas bajo /typeToVehicles (Vue / legado) */
 function RedirectLegacyVehicleDetail() {
@@ -53,10 +59,25 @@ export default function AppRouter({ user, setUser }) {
       />
 
       <Route
+        path="/soporte"
+        element={
+          user ? (
+            <RequireDevUser user={user}>
+              <DevSoporteInternoView user={user} />
+            </RequireDevUser>
+          ) : (
+            <Navigate to="/" />
+          )
+        }
+      />
+
+      <Route
         path="/all-bases"
         element={
           user ? (
-            <Bases user={user} />
+            <RequireOperationalUser user={user}>
+              <Bases user={user} />
+            </RequireOperationalUser>
           ) : (
             <Navigate to="/" />
           )
@@ -68,7 +89,9 @@ export default function AppRouter({ user, setUser }) {
         path="/typeToVehicles/description-u/:numberVehicle"
         element={
           user ? (
-            <VehicleMenuView user={user} />
+            <RequireOperationalUser user={user}>
+              <VehicleMenuView user={user} />
+            </RequireOperationalUser>
           ) : (
             <Navigate to="/" />
           )
@@ -79,7 +102,9 @@ export default function AppRouter({ user, setUser }) {
         path="/typeToVehicles"
         element={
           user ? (
-            <TypeToVehicles user={user} />
+            <RequireOperationalUser user={user}>
+              <TypeToVehicles user={user} />
+            </RequireOperationalUser>
           ) : (
             <Navigate to="/" />
           )
@@ -90,7 +115,9 @@ export default function AppRouter({ user, setUser }) {
         path="/typeToVehicles/:type"
         element={
           user ? (
-            <VehiclesByTypeView user={user} />
+            <RequireOperationalUser user={user}>
+              <VehiclesByTypeView user={user} />
+            </RequireOperationalUser>
           ) : (
             <Navigate to="/" />
           )
@@ -119,7 +146,9 @@ export default function AppRouter({ user, setUser }) {
         path="/sumary-service/:folioId"
         element={
           user ? (
-            <SumaryServiceDetailView user={user} />
+            <RequirePartesOrEstadisticas user={user}>
+              <SumaryServiceDetailView user={user} />
+            </RequirePartesOrEstadisticas>
           ) : (
             <Navigate to="/" />
           )
@@ -130,7 +159,9 @@ export default function AppRouter({ user, setUser }) {
         path="/sumarys"
         element={
           user ? (
-            <SummaryServicesView user={user} />
+            <RequirePartesOrEstadisticas user={user}>
+              <SummaryServicesView user={user} />
+            </RequirePartesOrEstadisticas>
           ) : (
             <Navigate to="/" />
           )
@@ -141,7 +172,9 @@ export default function AppRouter({ user, setUser }) {
         path="/services"
         element={
           user ? (
-            <ServiceMenuPrincipal user={user} />
+            <RequireOperationalUser user={user}>
+              <ServiceMenuPrincipal user={user} />
+            </RequireOperationalUser>
           ) : (
             <Navigate to="/" />
           )
@@ -152,7 +185,9 @@ export default function AppRouter({ user, setUser }) {
         path="/stadistics/*"
         element={
           user ? (
-            <StatisticsServicesLayout />
+            <RequirePartesOrEstadisticas user={user}>
+              <StatisticsServicesLayout />
+            </RequirePartesOrEstadisticas>
           ) : (
             <Navigate to="/" />
           )
@@ -163,7 +198,9 @@ export default function AppRouter({ user, setUser }) {
         path="/work-force-shift/:shift"
         element={
           user ? (
-            <WorkForceByGroupView />
+            <RequireOperationalUser user={user}>
+              <WorkForceByGroupView />
+            </RequireOperationalUser>
           ) : (
             <Navigate to="/" />
           )
@@ -179,7 +216,9 @@ export default function AppRouter({ user, setUser }) {
         path="/base-information/:name"
         element={
           user ? (
-            <BaseInformationView />
+            <RequireOperationalUser user={user}>
+              <BaseInformationView />
+            </RequireOperationalUser>
           ) : (
             <Navigate to="/" />
           )

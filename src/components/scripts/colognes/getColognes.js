@@ -1,8 +1,10 @@
 const API_URL = import.meta.env.VITE_BACKEND_URL ?? import.meta.env.VUE_APP_API_URL
 
+const fetchOpts = { credentials: "include" };
+
 export async function getAllColognes() {
     try {
-        const response = await fetch(API_URL+"/colognes");
+        const response = await fetch(API_URL+"/colognes", fetchOpts);
         if (!response.ok) {
             throw new Error(`Error en la petición: ${response.status}`);
         }

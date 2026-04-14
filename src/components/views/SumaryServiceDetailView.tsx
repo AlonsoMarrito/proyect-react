@@ -9,6 +9,12 @@ import { getVehicleById } from "../scripts/vehicle/generalInfoVehicle/getVehicle
 import { getAllUser } from "../scripts/user/getUser";
 import { stripResumenHeading } from "../../helpers/stripResumenHeading";
 
+function numId(v: unknown): number | null {
+  if (v == null || v === "") return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+
 type PageTheme = {
   textColorPrimary: string;
   pageBg: string;
@@ -118,16 +124,43 @@ export default function SumaryServiceDetailView(_props: { user?: unknown }) {
 
       setRow(data as Record<string, unknown>);
 
-      const idType = data.id_type_service as number | undefined;
+      const rowRec = data as Record<string, unknown>;
+      const idType = numId(data.id_type_service);
       if (idType != null && Array.isArray(types)) {
-        const t = types.find((x: { id?: number }) => x.id === idType);
-        setTypeName(t?.name != null ? String(t.name) : "—");
+        const t = types.find(
+          (x: { id?: unknown }) => Number(x.id) === idType
+        );
+        setTypeName(
+          t?.name != null ? String(t.name) : String(rowRec.type_service ?? "—")
+        );
+      } else {
+        setTypeName(String(rowRec.type_service ?? "—"));
       }
 
-      const idCol = data.id_cologne as number | undefined;
+      const idCol = numId(data.id_cologne);
       if (idCol != null && Array.isArray(colognes)) {
-        const c = colognes.find((x: { id?: number }) => Number(x.id) === Number(idCol));
-        setCologneName(c?.name != null ? String(c.name) : "—");
+        const c = colognes.find(
+          (x: { id?: unknown }) => Number(x.id) === idCol
+        );
+        setCologneName(
+          c?.name != null
+            ? String(c.name)
+            : String(
+                rowRec.cologne_name ??
+                  rowRec.name_cologne ??
+                  rowRec.cologne ??
+                  "—"
+              )
+        );
+      } else {
+        setCologneName(
+          String(
+            rowRec.cologne_name ??
+              rowRec.name_cologne ??
+              rowRec.cologne ??
+              "—"
+          )
+        );
       }
 
       const vid = data.vehicle_id as number | undefined;

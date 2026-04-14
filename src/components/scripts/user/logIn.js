@@ -52,3 +52,36 @@ export async function authUser() {
   }
 }
 
+/** Borra cookies legibles por JS (las HttpOnly solo las invalida el servidor en logout). */
+export function clearBrowserCookies() {
+  try {
+    const parts = document.cookie.split(";");
+    for (const part of parts) {
+      const name = part.split("=")[0]?.trim();
+      if (!name) continue;
+      document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
+    }
+  } catch {
+    /* ignore */
+  }
+}
+
+/** Igual que en el proyecto Vue: POST /auth/logout + limpiar storages y cookies locales. */
+export async function logoutFromApp() {
+  try {
+    await fetch(`${API_URL}/auth/logout`, {
+      method: "POST",
+      credentials: "include",
+    });
+  } catch (err) {
+    console.error("logout:", err);
+  }
+  try {
+    sessionStorage.clear();
+    localStorage.clear();
+    clearBrowserCookies();
+  } catch {
+    /* ignore */
+  }
+}
+

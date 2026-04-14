@@ -7,7 +7,8 @@ export async function getDatasNotOrBadFunction(numVeh) {
     const dataUnit = await getTypeVehicle(numVeh);
 
     const response = await fetch(
-      `${API_URL}/vehicle-registration/${dataUnit.id}`
+      `${API_URL}/vehicle-registration/${dataUnit.id}`,
+      { credentials: "include" }
     );
 
     if (!response.ok) {
@@ -40,7 +41,9 @@ export async function getDatasDamages(numVeh){
   let units = []
   try {
     const dataUnit = await getTypeVehicle(numVeh);
-      const response = await fetch(API_URL + "/damages/inone-vehicle/"+dataUnit.id);
+      const response = await fetch(API_URL + "/damages/inone-vehicle/"+dataUnit.id, {
+        credentials: "include",
+      });
       if (!response.ok) {
         throw new Error(`Error en la petición: ${response.status}`);
       }
@@ -54,7 +57,9 @@ export async function getDatasDamages(numVeh){
 export async function getDataDamageOneVehicle(numVeh){
   let units = []
   try {
-      const response = await fetch(API_URL + "/damages/damage/"+numVeh);
+      const response = await fetch(API_URL + "/damages/damage/"+numVeh, {
+        credentials: "include",
+      });
       if (!response.ok) {
         throw new Error(`Error en la petición: ${response.status}`);
       }
